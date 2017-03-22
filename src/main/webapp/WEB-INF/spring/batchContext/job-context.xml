@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd 
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<context:annotation-config />
+	<bean
+		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+
+	<bean id="dataSkipListener" class="com.docusign.app.batch.handler.DataRecordSkipHandler">
+		<property name="csvFileFailItemWriter" ref="csvFileFailItemWriter" />
+	</bean>
+
+	<!-- Batch job -->
+	<batch:job id="dataProcessingJob">
+		<batch:step id="step1">
+			<batch:tasklet>
+				<batch:chunk reader="csvFileItemReader" processor="dataProcessor"
+					writer="csvFileItemWriter" commit-interval="2" skip-limit="20">
+					<batch:streams>
+						<batch:stream ref="csvFileFailItemWriter" />
+					</batch:streams>
+					<batch:skippable-exception-classes>
+						<batch:include class="java.lang.Exception" />
+					</batch:skippable-exception-classes>
+				</batch:chunk>
+			</batch:tasklet>
+			<batch:listeners>
+				<batch:listener ref="dataSkipListener" />
+			</batch:listeners>
+		</batch:step>
+	</batch:job>
+
+	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate" />
+
+	<bean id="powerFormService" class="com.docusign.app.services.PowerFormService" />
+
+	<bean id="valueValidator" class="com.docusign.app.batch.validator.ValueValidator" />
+
+	<bean id="dataProcessor" class="com.docusign.app.batch.processor.DataProcessor"
+		scope="step" />
+
+	<bean id="csvFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader"
+		scope="step">
+		<property name="resource" value="#{jobParameters['inputDataFile']}" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names" value="#{jobParameters['headerLine']}" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<bean
+						class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" />
+				</property>
+			</bean>
+		</property>
+		<property name="skippedLinesCallback" ref="headerCopier" />
+		<property name="linesToSkip" value="1" />
+	</bean>
+
+	<bean id="headerCopier" class="com.docusign.app.batch.support.HeaderCopyCallback" />
+
+	<bean id="csvFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
+		scope="step">
+		<!-- write to this csv file -->
+		<property name="resource" value="#{jobParameters['outputDataFile']}" />
+		<property name="shouldDeleteIfExists" value="true" />
+		<property name="shouldDeleteIfEmpty" value="true" />
+
+		<property name="lineAggregator">
+			<bean
+				class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+				<property name="delimiter" value="," />
+				<property name="fieldExtractor">
+					<bean
+						class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor">
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="csvFileFailItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
+		scope="step">
+		<!-- write to this csv file -->
+		<property name="resource" value="#{jobParameters['outputFailedFile']}" />
+		<property name="shouldDeleteIfExists" value="true" />
+		<property name="shouldDeleteIfEmpty" value="true" />
+
+		<property name="lineAggregator">
+			<bean
+				class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+				<property name="delimiter" value="," />
+				<property name="fieldExtractor">
+					<bean
+						class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor">
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+</beans>
