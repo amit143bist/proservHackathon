@@ -9,4 +9,12 @@ package com.docusign.envelopes.dao;
  */
 public interface EnvelopesDocuServiceDAO {
 
+	String createJobId(String accountId, String jobTypeId);
+	
+	String createConcurrentEnvelopeTasks();
+	
+	String fetchJobStatus(String jobId);
+	
+	String fetchEnvelopeIds(boolean transactionStatus);
+	
 }

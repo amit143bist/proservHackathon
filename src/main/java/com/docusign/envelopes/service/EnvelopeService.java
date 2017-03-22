@@ -23,5 +23,5 @@ public interface EnvelopeService {
 	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId);
 	
 	public String updateEnvelopesStatusUsingCSVs(List<MultipartFile> multiPartFiles, String accountId);
-
+	
 }
