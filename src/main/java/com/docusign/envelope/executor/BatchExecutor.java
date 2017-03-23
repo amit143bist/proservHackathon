@@ -26,8 +26,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.docusign.envelope.file.processor.DSEnvelopeNotificationProcessor;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
-import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
+import com.docusign.mvc.model.EnvelopeDataList;
+import com.docusign.mvc.model.Notification;
 
 /**
  * @author Amit.Bist
@@ -36,17 +38,20 @@ import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
 public class BatchExecutor implements ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
-	
+
 	public static Map<String, Object> customStorage = new HashMap<String, Object>();
 
 	@Autowired
 	EnvelopesDocuServiceDAO envelopesDocuServiceDAO;
-	
+
 	@Autowired
 	JobLauncher jobLauncher;
-	
+
 	@Autowired
 	Job notificationProcessingJob;
+
+	@Autowired
+	DSEnvelopeNotificationProcessor dsEnvelopeNotificationProcessor;
 
 	/*
 	 * @Autowired private LineMapper<EnvelopeDetails> lineMapper;
@@ -62,9 +67,9 @@ public class BatchExecutor implements ApplicationContextAware {
 
 		private List<MultipartFile> multiPartFiles;
 
-		private List<EnvelopeNotificationDTO> envelopeNotificationDTOList;
+		private List<EnvelopeDataList> envelopeNotificationDTOList;
 
-		public BatchTask(String jobId, List<EnvelopeNotificationDTO> envelopeNotificationDTOList,
+		public BatchTask(String jobId, List<EnvelopeDataList> envelopeNotificationDTOList,
 				List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader) {
 			this.jobId = jobId;
 			this.accountId = accountId;
@@ -74,82 +79,74 @@ public class BatchExecutor implements ApplicationContextAware {
 		}
 
 		public void run() {
+
 			logger.info(jobId + " multiPartFiles- " + multiPartFiles + " envelopeNotificationDTOList- "
 					+ envelopeNotificationDTOList);
+			if (null != multiPartFiles) {
 
-			BatchExecutor.customStorage.put("multiPartFiles", multiPartFiles);
-			BatchExecutor.customStorage.put("envelopeNotificationDTOList", envelopeNotificationDTOList);
+				BatchExecutor.customStorage.put("multiPartFiles", multiPartFiles);
+				BatchExecutor.customStorage.put("envelopeNotificationDTOList", envelopeNotificationDTOList);
 
-//			JobLauncher jobLauncher = (JobLauncher) applicationContext.getBean("jobLauncher");
-//			Job job = (Job) applicationContext.getBean("notificationProcessingJob");
-			
-			logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob + " applicationContext- " + applicationContext);
-			
-			System.out.println("BatchExecutor.BatchTask.run()- " + 
-					"jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob + " applicationContext- " + applicationContext);
+				// JobLauncher jobLauncher = (JobLauncher)
+				// applicationContext.getBean("jobLauncher");
+				// Job job = (Job)
+				// applicationContext.getBean("notificationProcessingJob");
 
-			Map<String, JobParameter> parametersMap = new LinkedHashMap<String, JobParameter>();
+				logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob
+						+ " applicationContext- " + applicationContext);
 
-			parametersMap.put("jobId", new JobParameter(jobId));
-			parametersMap.put("accountId", new JobParameter(accountId));
-			parametersMap.put("dsAuthHeader", new JobParameter(dsAuthHeader));
-			parametersMap.put("outputDataFile", new JobParameter("C://Softwares"));
-			
-			parametersMap.put("reminderEnabled", new JobParameter("true"));
-			parametersMap.put("expirationEnabled", new JobParameter("false"));
+				System.out.println("BatchExecutor.BatchTask.run()- " + "jobLauncher- " + jobLauncher + " job- "
+						+ notificationProcessingJob + " applicationContext- " + applicationContext);
 
-			JobParameters jobParameters = new JobParameters(parametersMap);
+				Map<String, JobParameter> parametersMap = new LinkedHashMap<String, JobParameter>();
 
-			try {
-				JobExecution execution = jobLauncher.run(notificationProcessingJob, jobParameters);
-				
-				envelopesDocuServiceDAO.updateJobId(accountId, jobId);
-			} catch (JobExecutionAlreadyRunningException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JobRestartException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JobInstanceAlreadyCompleteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JobParametersInvalidException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				parametersMap.put("jobId", new JobParameter(jobId));
+				parametersMap.put("accountId", new JobParameter(accountId));
+				parametersMap.put("dsAuthHeader", new JobParameter(dsAuthHeader));
+				parametersMap.put("outputDataFile", new JobParameter("C://Softwares"));
+
+				parametersMap.put("reminderEnabled", new JobParameter("true"));
+				parametersMap.put("expirationEnabled", new JobParameter("false"));
+
+				JobParameters jobParameters = new JobParameters(parametersMap);
+
+				try {
+					JobExecution execution = jobLauncher.run(notificationProcessingJob, jobParameters);
+
+					envelopesDocuServiceDAO.updateJobId(accountId, jobId);
+				} catch (JobExecutionAlreadyRunningException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JobRestartException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JobInstanceAlreadyCompleteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JobParametersInvalidException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
+
+				dsEnvelopeNotificationProcessor.setAccountId(accountId);
+				dsEnvelopeNotificationProcessor.setJobId(jobId);
+				dsEnvelopeNotificationProcessor.setDsAuthHeader(dsAuthHeader);
+
+				for (EnvelopeDataList envelopeDataList : envelopeNotificationDTOList) {
+					Notification notification = envelopeDataList.getNotification();
+					try {
+						dsEnvelopeNotificationProcessor.process(notification, envelopeDataList.getEnvelopeId());
+
+						envelopesDocuServiceDAO.updateJobId(accountId, jobId);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
 			}
 
-			/*
-			 * if(null == multiPartFiles){
-			 * 
-			 * 
-			 * 
-			 * }else{
-			 * 
-			 * for(MultipartFile file:multiPartFiles){
-			 * 
-			 * InputStream is = null; BufferedReader bfReader = null; try {
-			 * byte[] decodedBytes = Base64.decodeBase64(file.getBytes()); is =
-			 * new ByteArrayInputStream(decodedBytes); bfReader = new
-			 * BufferedReader(new InputStreamReader(is)); String temp = null;
-			 * int count = 0; while((temp = bfReader.readLine()) != null){
-			 * System.out.println(temp); count++; if(count > 1){ EnvelopeDetails
-			 * envelopeDetails = lineMapper.mapLine(temp, count); String params
-			 * = "ExpireEnabled- " + envelopeDetails.getExpireEnabled() +
-			 * " ExpireAfter-" + envelopeDetails.getExpireAfter() +
-			 * " ExpireWarn- " + envelopeDetails.getExpireWarn() +
-			 * " ReminderEnabled- " + envelopeDetails.getReminderEnabled() +
-			 * " ReminderDelay- " + envelopeDetails.getReminderDelay() +
-			 * " ReminderFrequency- " + envelopeDetails.getReminderFrequency();
-			 * 
-			 * envelopesDocuServiceDAO.saveEnvelopeIds(jobId,
-			 * envelopeDetails.getEnvelopeId(), params); } } } catch (Exception
-			 * e) { e.printStackTrace(); } finally { try{ if(is != null)
-			 * is.close(); } catch (Exception ex){
-			 * 
-			 * } } }
-			 * 
-			 * }
-			 */
 		}
 
 	}
@@ -160,10 +157,10 @@ public class BatchExecutor implements ApplicationContextAware {
 		this.threadPoolTaskExecutor = threadPoolTaskExecutor;
 	}
 
-	public void asyncCall(String jobId, List<EnvelopeNotificationDTO> envelopeNotificationDTOList,
+	public void asyncCall(String jobId, List<EnvelopeDataList> envelopeNotificationDTOList,
 			List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader) {
-			threadPoolTaskExecutor.execute(
-					new BatchTask(jobId, envelopeNotificationDTOList, multiPartFiles, accountId, dsAuthHeader));
+		threadPoolTaskExecutor
+				.execute(new BatchTask(jobId, envelopeNotificationDTOList, multiPartFiles, accountId, dsAuthHeader));
 	}
 
 	ApplicationContext applicationContext = null;

@@ -3,7 +3,6 @@
  */
 package com.docusign.envelope.file.partition;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.docusign.envelope.executor.BatchExecutor;
 
-
 /**
  * @author Amit.Bist
  *
@@ -27,16 +25,14 @@ public class MultiFileResourcePartitioner implements Partitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiFileResourcePartitioner.class);
 
-	/*private MultipartFile[] multipartFiles;
-
-	public MultipartFile[] getMultipartFiles() {
-		return multipartFiles;
-	}
-
-	public void setMultipartFiles(MultipartFile[] multipartFiles) {
-		this.multipartFiles = multipartFiles;
-	}*/
-
+	/*
+	 * private MultipartFile[] multipartFiles;
+	 * 
+	 * public MultipartFile[] getMultipartFiles() { return multipartFiles; }
+	 * 
+	 * public void setMultipartFiles(MultipartFile[] multipartFiles) {
+	 * this.multipartFiles = multipartFiles; }
+	 */
 
 	/*
 	 * (non-Javadoc)
@@ -48,27 +44,38 @@ public class MultiFileResourcePartitioner implements Partitioner {
 	@Override
 	public Map<String, ExecutionContext> partition(int gridSize) {
 
-		List<MultipartFile> multiPartFiles = (List<MultipartFile>)BatchExecutor.customStorage.get("multiPartFiles");
-		
+		List<MultipartFile> multiPartFiles = (List<MultipartFile>) BatchExecutor.customStorage.get("multiPartFiles");
+
 		logger.info("multiPartFiles in partitition- " + multiPartFiles);
-		
+
 		Map<String, ExecutionContext> partitionMap = new HashMap<String, ExecutionContext>();
 
-			for (MultipartFile file : multiPartFiles) {
-				ExecutionContext context = new ExecutionContext();
-				
-				logger.info("file.getOriginalFilename()- " + file.getOriginalFilename());
-				
-				try {
-					context.put("fileResource", Base64.decodeBase64(file.getBytes()));
-					context.put("fileReader", file.getOriginalFilename());
-					partitionMap.put(file.getOriginalFilename(), context);
-				} catch (IOException e) {
+		for (MultipartFile file : multiPartFiles) {
+			ExecutionContext context = new ExecutionContext();
+			
+			
+			logger.info("file.getOriginalFilename()- " + file.getOriginalFilename());
 
-					e.printStackTrace();
+			try {
+
+				System.out.println("MultiFileResourcePartitioner.partition()- " + Base64.isBase64(file.getBytes()));
+				if(Base64.isBase64(file.getBytes())){
+					
+					context.put("fileResource", Base64.decodeBase64(file.getBytes()));
+				}else{
+					
+					context.put("fileResource", file.getBytes());
 				}
-				
+
+				context.put("fileReader", file.getOriginalFilename());
+				context.put("fileName", file.getOriginalFilename());
+				partitionMap.put(file.getOriginalFilename(), context);
+			} catch (IOException e) {
+
+				e.printStackTrace();
 			}
+
+		}
 		return partitionMap;
 	}
 

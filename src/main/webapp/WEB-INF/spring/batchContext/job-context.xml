@@ -23,19 +23,21 @@
 		<!-- <property name="inboundDir" value="#{jobParameters['inputDirectoryPath']}" /> -->
 	</bean>
 
-	<bean id="notificationLoadTaskExecutor"
+	<!-- <bean id="notificationLoadTaskExecutor"
 		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" scope="step">
 		<property name="corePoolSize" value="5" />
 		<property name="maxPoolSize" value="20" />
 		<property name="queueCapacity" value="20" />
 		<property name="allowCoreThreadTimeOut" value="true" />
-	</bean>
+	</bean> -->
+	
+	<bean id="notificationLoadTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor" />
 
 	<!-- Batch job -->
 	<batch:job id="notificationProcessingJob">
 		<batch:step id="partitionedInventoryLoadStep">
 			<batch:partition step="step1" partitioner="notificationPartitioner">
-				<batch:handler grid-size="100" task-executor="notificationLoadTaskExecutor" />
+				<batch:handler grid-size="1" task-executor="notificationLoadTaskExecutor" />
 			</batch:partition>
 		</batch:step>
 	</batch:job>
@@ -95,9 +97,9 @@
 	<bean id="csvFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
 		scope="step">
 		<!-- write to this csv file -->
-		<property name="resource" value="file:#{jobParameters['outputDataFile']}/report.processed_success.csv" />
+		<property name="resource"
+			value="file:#{jobParameters['outputDataFile']}/report.processed_#{jobParameters['jobId']}_#{stepExecutionContext['fileName']}" />
 		<property name="shouldDeleteIfExists" value="true" />
-		<property name="shouldDeleteIfEmpty" value="true" />
 
 		<property name="lineAggregator">
 			<bean
@@ -105,7 +107,9 @@
 				<property name="delimiter" value="," />
 				<property name="fieldExtractor">
 					<bean
-						class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor">
+						class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+						<property name="names"
+							value="envelopeId,reminderEnabled,reminderDelay,reminderFrequency,expireEnabled,expireAfter,expireWarn,success,transMessage" />
 					</bean>
 				</property>
 			</bean>
@@ -116,9 +120,9 @@
 		scope="step">
 		<!-- write to this csv file -->
 		
-		<property name="resource" value="file:#{jobParameters['outputDataFile']}/report.processed_failed.csv" />
+		<property name="resource"
+			value="file:#{jobParameters['outputDataFile']}/report.failed_#{jobParameters['jobId']}_#{stepExecutionContext['fileName']}" />
 		<property name="shouldDeleteIfExists" value="true" />
-		<property name="shouldDeleteIfEmpty" value="true" />
 
 		<property name="lineAggregator">
 			<bean
@@ -126,7 +130,9 @@
 				<property name="delimiter" value="," />
 				<property name="fieldExtractor">
 					<bean
-						class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor">
+						class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+						<property name="names"
+							value="envelopeId,reminderEnabled,reminderDelay,reminderFrequency,expireEnabled,expireAfter,expireWarn,success,transMessage" />
 					</bean>
 				</property>
 			</bean>

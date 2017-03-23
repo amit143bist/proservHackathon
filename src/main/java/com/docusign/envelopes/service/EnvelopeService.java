@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
 import com.docusign.envelopes.dto.EnvelopeStatusDTO;
+import com.docusign.mvc.model.EnvelopeDataList;
 
 /**
  * @author Amit.Bist
@@ -16,7 +16,7 @@ import com.docusign.envelopes.dto.EnvelopeStatusDTO;
  */
 public interface EnvelopeService {
 	
-	public String updateEnvelopesNotifications(List<EnvelopeNotificationDTO> envelopeNotificationDTOList, String accountId, String dsAuthHeader);
+	public String updateEnvelopesNotifications(List<EnvelopeDataList> envelopeNotificationDTOList, String accountId, String dsAuthHeader);
 	
 	public String updateEnvelopesNotificationsUsingCSVs(List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader);
 	

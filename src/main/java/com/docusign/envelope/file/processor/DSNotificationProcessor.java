@@ -130,12 +130,15 @@ public class DSNotificationProcessor implements ItemProcessor<EnvelopeDetails, E
 
 			logger.info("Body- " + jsonResp.getBody() + " RespHeaders- " + jsonResp.getHeaders());
 
+			envDetails.setSuccess(true);
+			envDetails.setTransMessage("Success");
 			envelopesDocuServiceDAO.saveEnvelopeIds(jobId, envDetails.getEnvelopeId(), params, true, "success");
 		} catch (Exception exp) {
 
 			String transMessage = null;
 			try {
 
+				exp.printStackTrace();
 				DSErrors error = null;
 				if (exp instanceof HttpClientErrorException) {
 
@@ -143,7 +146,10 @@ public class DSNotificationProcessor implements ItemProcessor<EnvelopeDetails, E
 					
 					System.out.println("DSNotificationProcessor.process()- " + clientExp.getResponseBodyAsString());
 
-					error = objectMapper.readValue(clientExp.getResponseBodyAsString(), DSErrors.class);
+					if(clientExp.getResponseBodyAsString().contains("errorCode")){
+
+						error = objectMapper.readValue(clientExp.getResponseBodyAsString(), DSErrors.class);
+					}
 				}
 
 				transMessage = exp.getMessage();
@@ -154,6 +160,8 @@ public class DSNotificationProcessor implements ItemProcessor<EnvelopeDetails, E
 				exp1.printStackTrace();
 			}
 
+			envDetails.setSuccess(false);
+			envDetails.setTransMessage(transMessage);
 			envelopesDocuServiceDAO.saveEnvelopeIds(jobId, envDetails.getEnvelopeId(), params, false, transMessage);
 		}
 

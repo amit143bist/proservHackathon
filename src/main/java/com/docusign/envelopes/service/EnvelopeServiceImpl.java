@@ -12,6 +12,7 @@ import com.docusign.envelope.executor.BatchExecutor;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
 import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
 import com.docusign.envelopes.dto.EnvelopeStatusDTO;
+import com.docusign.mvc.model.EnvelopeDataList;
 
 /**
  * @author Amit.Bist
@@ -32,7 +33,7 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 * updateEnvelopesNotifications(java.util.List)
 	 */
 	@Override
-	public String updateEnvelopesNotifications(List<EnvelopeNotificationDTO> envelopeNotificationDTOList,
+	public String updateEnvelopesNotifications(List<EnvelopeDataList> envelopeNotificationDTOList,
 			String accountId, String dsAuthHeader) {
 
 		String jobId = envelopesDocuServiceDAO.createJobId(accountId, "NOTIFICATION_JOB");

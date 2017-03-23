@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,10 +60,16 @@ public class EnvelopeBulkUpdateController {
 	 * </p>
 	 */
 	@RequestMapping(value = "/account/{accountId}/envelopes/notification", method = RequestMethod.PUT, produces = "application/json")
-	public EnvelopeUpdateStatus updateEnvelopesNotification(EnvelopeData envelopeData, @PathVariable String accountId) {
+	public EnvelopeUpdateStatus updateEnvelopesNotification(@RequestBody EnvelopeData envelopeData, 
+			@PathVariable String accountId, HttpServletRequest request) {
+
+		String authHeader = request.getHeader("X-DocuSign-Authentication");
+		
+		String jobId = envelopeService.updateEnvelopesNotifications(envelopeData.getEnvelopeDataList(), accountId,
+				authHeader);
 
 		EnvelopeUpdateStatus response = new EnvelopeUpdateStatus();
-		response.setBatchId("705c766c-b7c0-4c3e-8ed9-6f2eabdba68e");
+		response.setBatchId(jobId);
 		response.setStatus("In Progress");
 
 		return response;
@@ -104,6 +111,8 @@ public class EnvelopeBulkUpdateController {
 	public EnvelopeUpdateStatus bulkUpdateService(@RequestPart("track") Track track, @PathVariable String accountId,
 			HttpServletRequest request, @RequestPart("file") MultipartFile... files) {
 
+		
+		System.out.println("EnvelopeBulkUpdateController.bulkUpdateService()- " + request.getHeader("Content-Transfer-Encoding"));
 		String authHeader = request.getHeader("X-DocuSign-Authentication");
 
 		String jobId = envelopeService.updateEnvelopesNotificationsUsingCSVs(Arrays.asList(files), accountId,
