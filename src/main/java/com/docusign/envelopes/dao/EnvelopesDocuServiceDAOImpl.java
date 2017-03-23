@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.hibernate.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.docusign.envelopes.db.domain.EnvelopeConcurrentLog;
 import com.docusign.envelopes.db.domain.EnvelopeConcurrentLogPK;
@@ -19,6 +20,7 @@ import com.docusign.envelopes.db.domain.EnvelopeScheduledTask;
  * @author Amit.Bist
  *
  */
+@Transactional(rollbackFor = Exception.class)
 public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements EnvelopesDocuServiceDAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(EnvelopesDocuServiceDAOImpl.class);
