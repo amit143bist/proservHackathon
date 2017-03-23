@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.Criteria;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -77,14 +78,24 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 	@Override
 	public String fetchJobStatus(String jobId) {
 
-		EnvelopeScheduledTask envelopeScheduledTask = (EnvelopeScheduledTask) getSession()
-				.load(EnvelopeScheduledTask.class, jobId);
+		try{
+			EnvelopeScheduledTask envelopeScheduledTask = (EnvelopeScheduledTask) getSession()
+					.load(EnvelopeScheduledTask.class, jobId);
 
-		if (null != envelopeScheduledTask) {
-			if (null != envelopeScheduledTask.getEnvelopeJobEndDateTime()) {
-				return "Completed";
+			if (null != envelopeScheduledTask) {
+				if (null != envelopeScheduledTask.getEnvelopeJobEndDateTime()) {
+					return "Completed";
+				}else{
+					return "InProgress";
+				}
 			}
+			
+		}catch(ObjectNotFoundException exception){
+			
+			System.out.println("Exception in EnvelopesDocuServiceDAOImpl.fetchJobStatus()- " + exception.getMessage());
+			return "WrongBatchId";
 		}
+		
 		return "InProgress";
 	}
 
