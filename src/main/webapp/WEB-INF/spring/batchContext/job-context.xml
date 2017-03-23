@@ -11,61 +11,82 @@
 	<bean
 		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
 
-	<bean id="dataSkipListener" class="com.docusign.app.batch.handler.DataRecordSkipHandler">
-		<property name="csvFileFailItemWriter" ref="csvFileFailItemWriter" />
+	<bean id="dataSkipListener"
+		class="com.docusign.envelope.batch.handler.DataRecordSkipHandler">
+		<!-- <property name="csvFileFailItemWriter" ref="csvFileFailItemWriter" 
+			/> -->
+	</bean>
+
+	<bean id="notificationPartitioner"
+		class="com.docusign.envelope.file.partition.MultiFileResourcePartitioner"
+		scope="step">
+		<!-- <property name="inboundDir" value="#{jobParameters['inputDirectoryPath']}" /> -->
+	</bean>
+
+	<bean id="notificationLoadTaskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" scope="step">
+		<property name="corePoolSize" value="1" />
+		<property name="maxPoolSize" value="1" />
+		<property name="allowCoreThreadTimeOut" value="true" />
 	</bean>
 
 	<!-- Batch job -->
-	<batch:job id="dataProcessingJob">
-		<batch:step id="step1">
-			<batch:tasklet>
-				<batch:chunk reader="csvFileItemReader" processor="dataProcessor"
-					writer="csvFileItemWriter" commit-interval="2" skip-limit="20">
-					<batch:streams>
-						<batch:stream ref="csvFileFailItemWriter" />
-					</batch:streams>
-					<batch:skippable-exception-classes>
-						<batch:include class="java.lang.Exception" />
-					</batch:skippable-exception-classes>
-				</batch:chunk>
-			</batch:tasklet>
-			<batch:listeners>
-				<batch:listener ref="dataSkipListener" />
-			</batch:listeners>
+	<batch:job id="notificationProcessingJob">
+		<batch:step id="partitionedInventoryLoadStep">
+			<batch:partition step="step1" partitioner="notificationPartitioner">
+				<batch:handler grid-size="10" task-executor="notificationLoadTaskExecutor" />
+			</batch:partition>
 		</batch:step>
 	</batch:job>
 
+	<batch:step id="step1">
+		<batch:tasklet>
+			<batch:chunk reader="csvFileItemReader" processor="dataProcessor"
+				writer="csvFileItemWriter" commit-interval="2" skip-limit="20">
+				<batch:streams>
+					<batch:stream ref="csvFileFailItemWriter" />
+				</batch:streams>
+				<batch:skippable-exception-classes>
+					<batch:include class="java.lang.Exception" />
+				</batch:skippable-exception-classes>
+			</batch:chunk>
+		</batch:tasklet>
+		<!-- <batch:listeners>
+			<batch:listener ref="dataSkipListener" />
+		</batch:listeners> -->
+	</batch:step>
+
 	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate" />
 
-	<bean id="powerFormService" class="com.docusign.app.services.PowerFormService" />
-
-	<bean id="valueValidator" class="com.docusign.app.batch.validator.ValueValidator" />
-
-	<bean id="dataProcessor" class="com.docusign.app.batch.processor.DataProcessor"
-		scope="step" />
-
-	<bean id="csvFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader"
+	<bean id="dataProcessor"
+		class="com.docusign.envelope.file.processor.DSNotificationProcessor"
 		scope="step">
-		<property name="resource" value="#{jobParameters['inputDataFile']}" />
+		
+		<property name = "dsAuthHeader" value="#{jobParameters['dsAuthHeader']}"/>
+		<property name = "accountId" value="#{jobParameters['accountId']}"/>
+		<property name = "jobId" value="#{jobParameters['jobId']}"/>
+		
+	</bean>
+
+	<bean id="csvFileItemReader" class="com.docusign.envelope.file.reader.StreamFileReader"
+		scope="step">
+		<property name="resourceFile" value="#{stepExecutionContext['fileResource']}" />
 		<property name="lineMapper">
 			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
 				<property name="lineTokenizer">
 					<bean
 						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="names" value="#{jobParameters['headerLine']}" />
+						<property name="names"
+							value="envelopeId,reminderEnabled,reminderDelay,reminderFrequency,expireEnabled,expireAfter,expireWarn" />
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-					<bean
-						class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" />
+					<bean class="com.docusign.envelope.file.mapper.EnvelopeSetMapper">
+					</bean>
 				</property>
 			</bean>
 		</property>
-		<property name="skippedLinesCallback" ref="headerCopier" />
-		<property name="linesToSkip" value="1" />
 	</bean>
-
-	<bean id="headerCopier" class="com.docusign.app.batch.support.HeaderCopyCallback" />
 
 	<bean id="csvFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
 		scope="step">
@@ -90,7 +111,7 @@
 	<bean id="csvFileFailItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
 		scope="step">
 		<!-- write to this csv file -->
-		<property name="resource" value="#{jobParameters['outputFailedFile']}" />
+		<property name="resource" value="#{jobParameters['outputDataFile']}" />
 		<property name="shouldDeleteIfExists" value="true" />
 		<property name="shouldDeleteIfEmpty" value="true" />
 

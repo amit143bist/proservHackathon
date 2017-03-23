@@ -3,18 +3,23 @@
  */
 package com.docusign.envelopes.db.domain;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.Id;
 
 /**
  * @author Amit.Bist
  *
  */
 @Embeddable
-public class EnvelopeConcurrentLogPK {
+public class EnvelopeConcurrentLogPK implements Serializable{
 
-	@Id
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5512880776911935408L;
+
 	@Column(name = "EnvelopeJobId")
 	private String envelopeJobId;
 	

@@ -20,6 +20,9 @@ import com.docusign.envelopes.dto.EnvelopeStatusDTO;
 public class EnvelopeServiceImpl implements EnvelopeService {
 
 	@Autowired
+	BatchExecutor batchExecutor;
+
+	@Autowired
 	EnvelopesDocuServiceDAO envelopesDocuServiceDAO;
 
 	/*
@@ -30,11 +33,10 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 */
 	@Override
 	public String updateEnvelopesNotifications(List<EnvelopeNotificationDTO> envelopeNotificationDTOList,
-			String accountId) {
+			String accountId, String dsAuthHeader) {
 
 		String jobId = envelopesDocuServiceDAO.createJobId(accountId, "NOTIFICATION_JOB");
-		BatchExecutor batchExecutor = new BatchExecutor(jobId, envelopeNotificationDTOList, null);
-		batchExecutor.run();
+		batchExecutor.asyncCall(jobId, envelopeNotificationDTOList, null, accountId, dsAuthHeader);
 
 		return jobId;
 	}
@@ -46,11 +48,11 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 * updateEnvelopesNotificationsUsingCSVs(java.util.List)
 	 */
 	@Override
-	public String updateEnvelopesNotificationsUsingCSVs(List<MultipartFile> multiPartFiles, String accountId) {
+	public String updateEnvelopesNotificationsUsingCSVs(List<MultipartFile> multiPartFiles, String accountId,
+			String dsAuthHeader) {
 
-		String jobId = envelopesDocuServiceDAO.createJobId(accountId, "NOTIFICATION_JOB");
-		BatchExecutor batchExecutor = new BatchExecutor(jobId, null, multiPartFiles);
-		batchExecutor.run();
+		String jobId = envelopesDocuServiceDAO.createJobId(accountId, "NOTIFICATION_JOB_CSV");
+		batchExecutor.asyncCall(jobId, null, multiPartFiles, accountId, dsAuthHeader);
 
 		return jobId;
 	}
@@ -63,7 +65,8 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 * .util.List)
 	 */
 	@Override
-	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId) {
+	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId,
+			String dsAuthHeader) {
 
 		return null;
 	}
@@ -75,7 +78,8 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 * updateEnvelopesStatusUsingCSVs(java.util.List)
 	 */
 	@Override
-	public String updateEnvelopesStatusUsingCSVs(List<MultipartFile> multiPartFiles, String accountId) {
+	public String updateEnvelopesStatusUsingCSVs(List<MultipartFile> multiPartFiles, String accountId,
+			String dsAuthHeader) {
 
 		return null;
 	}

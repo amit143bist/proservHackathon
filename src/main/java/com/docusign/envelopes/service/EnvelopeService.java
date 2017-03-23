@@ -16,12 +16,12 @@ import com.docusign.envelopes.dto.EnvelopeStatusDTO;
  */
 public interface EnvelopeService {
 	
-	public String updateEnvelopesNotifications(List<EnvelopeNotificationDTO> envelopeNotificationDTOList, String accountId);
+	public String updateEnvelopesNotifications(List<EnvelopeNotificationDTO> envelopeNotificationDTOList, String accountId, String dsAuthHeader);
 	
-	public String updateEnvelopesNotificationsUsingCSVs(List<MultipartFile> multiPartFiles, String accountId);
+	public String updateEnvelopesNotificationsUsingCSVs(List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader);
 	
-	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId);
+	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId, String dsAuthHeader);
 	
-	public String updateEnvelopesStatusUsingCSVs(List<MultipartFile> multiPartFiles, String accountId);
+	public String updateEnvelopesStatusUsingCSVs(List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader);
 	
 }

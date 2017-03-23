@@ -4,12 +4,42 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-	<import resource="classpath:batchContext/job-context.xml" />
-	<import resource="classpath:batchContext/launch-context.xml" />
-	<import resource="classpath:batchContext/data-context.xml" />
-	
+
+	<!-- <import resource="classpath:/src/main/webapp/WEB-INF/spring/batchContext/job-context.xml" />
+	<import resource="classpath:/batchContext/launch-context.xml" />
+	<import resource="classpath:/dataContext/data-context.xml" />
+ -->
 	<context:annotation-config />
 	<!-- Root Context: defines shared resources visible to all other web components -->
 	<bean
 		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="5" />
+		<property name="maxPoolSize" value="10" />
+		<property name="queueCapacity" value="25" />
+	</bean>
+
+	<bean id="taskExecutorExample" class="com.docusign.envelope.executor.BatchExecutor">
+		<constructor-arg ref="taskExecutor" />
+		<!-- <property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names"
+							value="envelopeId,reminderEnabled,reminderDelay,reminderFrequency,expireEnabled,expireAfter,expireWarn" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<bean class="com.docusign.envelope.file.mapper.EnvelopeSetMapper">
+					</bean>
+				</property>
+			</bean>
+		</property> -->
+	</bean>
+	
+	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
+	<bean id="envelopeService" class="com.docusign.envelopes.service.EnvelopeServiceImpl"/>
 </beans>
