@@ -100,10 +100,10 @@ public class BatchExecutor implements ApplicationContextAware {
 
 			JobParameters jobParameters = new JobParameters(parametersMap);
 
-			envelopesDocuServiceDAO.updateJobId(accountId, jobId);
-
 			try {
 				JobExecution execution = jobLauncher.run(notificationProcessingJob, jobParameters);
+				
+				envelopesDocuServiceDAO.updateJobId(accountId, jobId);
 			} catch (JobExecutionAlreadyRunningException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

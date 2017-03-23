@@ -5,9 +5,12 @@ package com.docusign.envelopes.dao;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,10 +88,31 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 		return "InProgress";
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.docusign.envelopes.dao.EnvelopesDocuServiceDAO#fetchEnvelopeIds(
+	 * boolean, java.lang.String)
+	 */
 	@Override
-	public String fetchEnvelopeIds(boolean transactionStatus) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<EnvelopeConcurrentLog> fetchEnvelopeIds(String transactionStatus, String jobId) {
+
+		Criteria criteria = getSession().createCriteria(EnvelopeConcurrentLog.class);
+		criteria.add(Restrictions.eq("envelopeConcurrentLogPK.envelopeJobId", jobId));
+
+		if ("fail".equalsIgnoreCase(transactionStatus)) {
+			criteria.add(Restrictions.eq("envelopeSuccessFlag", false));
+		}
+
+		if ("success".equalsIgnoreCase(transactionStatus)) {
+			criteria.add(Restrictions.eq("envelopeSuccessFlag", true));
+		}
+
+		criteria.setCacheable(true);
+
+		List<EnvelopeConcurrentLog> concurrentLogList = criteria.list();
+
+		return concurrentLogList;
 	}
 
 	/*

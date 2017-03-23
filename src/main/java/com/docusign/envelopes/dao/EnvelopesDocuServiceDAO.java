@@ -3,6 +3,10 @@
  */
 package com.docusign.envelopes.dao;
 
+import java.util.List;
+
+import com.docusign.envelopes.db.domain.EnvelopeConcurrentLog;
+
 /**
  * @author Amit.Bist
  *
@@ -17,7 +21,7 @@ public interface EnvelopesDocuServiceDAO {
 	
 	String fetchJobStatus(String jobId);
 	
-	String fetchEnvelopeIds(boolean transactionStatus);
+	List<EnvelopeConcurrentLog> fetchEnvelopeIds(String transactionStatus, String jobId);
 	
 	String saveEnvelopeIds(String jobId, String envelopeIds, String envelopeParams, boolean envelopeSuccessFlag, String envelopeTransactionComments);
 

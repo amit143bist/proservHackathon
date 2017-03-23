@@ -1,6 +1,7 @@
 package com.docusign.mvc.controller;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.docusign.envelope.ds.domain.Track;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
+import com.docusign.envelopes.db.domain.EnvelopeConcurrentLog;
 import com.docusign.envelopes.service.EnvelopeService;
 import com.docusign.mvc.model.EnvelopeData;
 import com.docusign.mvc.model.EnvelopeUpdateStatus;
@@ -28,7 +31,7 @@ public class EnvelopeBulkUpdateController {
 
 	@Autowired
 	EnvelopeService envelopeService;
-	
+
 	@Autowired
 	EnvelopesDocuServiceDAO envelopeServiceDao;
 
@@ -60,10 +63,11 @@ public class EnvelopeBulkUpdateController {
 
 		EnvelopeUpdateStatus response = new EnvelopeUpdateStatus();
 		response.setBatchId("705c766c-b7c0-4c3e-8ed9-6f2eabdba68e");
+		response.setStatus("In Progress");
 
 		return response;
 	}
-	
+
 	/**
 	 * <p>
 	 * Update envelopes notification.
@@ -74,27 +78,33 @@ public class EnvelopeBulkUpdateController {
 	 * </p>
 	 */
 	@RequestMapping(value = "/account/{accountId}/envelopes/batch/{batchId}", method = RequestMethod.GET, produces = "application/json")
-	public EnvelopeUpdateStatus retrieveBatchStatus(@PathVariable String accountId,
-				@PathVariable String batchId) {
+	public EnvelopeUpdateStatus retrieveBatchStatus(@PathVariable String accountId, @PathVariable String batchId) {
 
 		EnvelopeUpdateStatus response = new EnvelopeUpdateStatus();
-		
+
 		response.setBatchId(batchId);
 		response.setStatus(envelopeServiceDao.fetchJobStatus(batchId));
-		
+
 		return response;
 	}
 
+	@RequestMapping(value = "/account/{accountId}/envelopes/batch/{batchId}/records", method = RequestMethod.GET, produces = "application/json")
+	@ResponseBody
+	public List<EnvelopeConcurrentLog> fetchFailedEnvelopes(@PathVariable String accountId,
+			@PathVariable String batchId, @RequestParam(value = "status", required = false) String status) {
 
-	@RequestMapping(value = "/account/{accountId}/envelopes/bulk", method = RequestMethod.PUT, consumes = {
+		List<EnvelopeConcurrentLog> envelopeConcurrentLogList = envelopeServiceDao.fetchEnvelopeIds(status, batchId);
+
+		return envelopeConcurrentLogList;
+	}
+
+	@RequestMapping(value = "/account/{accountId}/envelopes/bulk", method = RequestMethod.POST, consumes = {
 			"multipart/form-data" })
 	@ResponseBody
 	public EnvelopeUpdateStatus bulkUpdateService(@RequestPart("track") Track track, @PathVariable String accountId,
-			HttpServletRequest request,
-			@RequestPart("file") MultipartFile... files) {
+			HttpServletRequest request, @RequestPart("file") MultipartFile... files) {
 
 		String authHeader = request.getHeader("X-DocuSign-Authentication");
-
 
 		String jobId = envelopeService.updateEnvelopesNotificationsUsingCSVs(Arrays.asList(files), accountId,
 				authHeader);
@@ -103,6 +113,7 @@ public class EnvelopeBulkUpdateController {
 
 		EnvelopeUpdateStatus response = new EnvelopeUpdateStatus();
 		response.setBatchId(jobId);
+		response.setStatus("In Progress");
 		return response;
 	}
 
