@@ -84,13 +84,19 @@ public class BatchExecutor implements ApplicationContextAware {
 //			Job job = (Job) applicationContext.getBean("notificationProcessingJob");
 			
 			logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob + " applicationContext- " + applicationContext);
+			
+			System.out.println("BatchExecutor.BatchTask.run()- " + 
+					"jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob + " applicationContext- " + applicationContext);
 
 			Map<String, JobParameter> parametersMap = new LinkedHashMap<String, JobParameter>();
 
 			parametersMap.put("jobId", new JobParameter(jobId));
 			parametersMap.put("accountId", new JobParameter(accountId));
 			parametersMap.put("dsAuthHeader", new JobParameter(dsAuthHeader));
-			parametersMap.put("outputDataFile", new JobParameter("C://Softwares//failed.csv"));
+			parametersMap.put("outputDataFile", new JobParameter("C://Softwares"));
+			
+			parametersMap.put("reminderEnabled", new JobParameter("true"));
+			parametersMap.put("expirationEnabled", new JobParameter("false"));
 
 			JobParameters jobParameters = new JobParameters(parametersMap);
 
@@ -156,10 +162,8 @@ public class BatchExecutor implements ApplicationContextAware {
 
 	public void asyncCall(String jobId, List<EnvelopeNotificationDTO> envelopeNotificationDTOList,
 			List<MultipartFile> multiPartFiles, String accountId, String dsAuthHeader) {
-		for (int i = 0; i < 25; i++) {
 			threadPoolTaskExecutor.execute(
 					new BatchTask(jobId, envelopeNotificationDTOList, multiPartFiles, accountId, dsAuthHeader));
-		}
 	}
 
 	ApplicationContext applicationContext = null;

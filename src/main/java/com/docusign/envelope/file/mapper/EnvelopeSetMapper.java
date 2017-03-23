@@ -16,6 +16,26 @@ import com.docusign.envelope.file.domain.EnvelopeDetails;
  */
 public class EnvelopeSetMapper implements FieldSetMapper<EnvelopeDetails> {
 
+	private String reminderEnabled;
+	
+	private String expirationEnabled;
+	
+	public String getReminderEnabled() {
+		return reminderEnabled;
+	}
+
+	public void setReminderEnabled(String reminderEnabled) {
+		this.reminderEnabled = reminderEnabled;
+	}
+
+	public String getExpirationEnabled() {
+		return expirationEnabled;
+	}
+
+	public void setExpirationEnabled(String expirationEnabled) {
+		this.expirationEnabled = expirationEnabled;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -28,6 +48,8 @@ public class EnvelopeSetMapper implements FieldSetMapper<EnvelopeDetails> {
 	 */
 	@Override
 	public EnvelopeDetails mapFieldSet(FieldSet fieldSet) throws BindException {
+		
+		System.out.println("EnvelopeSetMapper.mapFieldSet()- " + fieldSet);
 
 		EnvelopeDetails envelopeDetails = new EnvelopeDetails();
 
@@ -38,7 +60,7 @@ public class EnvelopeSetMapper implements FieldSetMapper<EnvelopeDetails> {
 			throw new EmptyDataException("envelopeId");
 		}
 
-//		if (null != appParameters && null != appParameters.getReminderAllowed() && appParameters.getReminderAllowed()) {
+		if ("true".equalsIgnoreCase(reminderEnabled)) {
 
 			if (isValueNotEmpty(fieldSet.readRawString(1))) {
 				envelopeDetails.setReminderEnabled(fieldSet.readBoolean(1));
@@ -57,10 +79,9 @@ public class EnvelopeSetMapper implements FieldSetMapper<EnvelopeDetails> {
 			} else {
 				throw new EmptyDataException("reminderFrequency");
 			}
-//		}
+		}
 
-		/*if (null != appParameters && null != appParameters.getExpirationAllowed()
-				&& appParameters.getExpirationAllowed()) {*/
+		if ("true".equalsIgnoreCase(expirationEnabled)) {
 
 			if (isValueNotEmpty(fieldSet.readRawString(4))) {
 				envelopeDetails.setExpireEnabled(fieldSet.readBoolean(4));
@@ -79,8 +100,9 @@ public class EnvelopeSetMapper implements FieldSetMapper<EnvelopeDetails> {
 			} else {
 				throw new EmptyDataException("expireWarn");
 			}
-//		}
+		}
 
+			System.out.println("EnvelopeSetMapper.mapFieldSet()- " + envelopeDetails.getEnvelopeId());
 		return envelopeDetails;
 	}
 

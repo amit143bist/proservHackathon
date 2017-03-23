@@ -33,6 +33,8 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 	private byte[] resourceFile;
 
 	private BufferedReader reader;
+	
+	private String[] comments = new String[] { "#" };
 
 	private RecordSeparatorPolicy recordSeparatorPolicy = new SimpleRecordSeparatorPolicy();
 
@@ -74,8 +76,12 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 			return null;
 		} else {
 			try {
+				
+				System.out.println("StreamFileReader.doRead()- " + line);
 				return lineMapper.mapLine(line, lineCount);
 			} catch (Exception ex) {
+				
+				ex.printStackTrace();
 				throw new FlatFileParseException(
 						"Parsing error at line: " + lineCount + " in resource=[" + "], input=[" + line + "]", ex, line,
 						lineCount);
@@ -85,6 +91,7 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 
 	private String readLine() {
 
+		System.out.println("StreamFileReader.readLine()");
 		if (reader == null) {
 			throw new ReaderNotOpenException("Reader must be open before it can be read.");
 		}
@@ -97,6 +104,14 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 				return null;
 			}
 			lineCount++;
+			
+			while (isComment(line)) {
+				line = reader.readLine();
+				if (line == null) {
+					return null;
+				}
+				lineCount++;
+			}
 
 			line = applyRecordSeparatorPolicy(line);
 		} catch (IOException e) {
@@ -105,7 +120,18 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 			noInput = true;
 			throw new NonTransientFlatFileException("Unable to read from resource: [" + "]", e, line, lineCount);
 		}
+		
+		System.out.println("line in StreamFileReader.readLine()- " + line);
 		return line;
+	}
+	
+	private boolean isComment(String line) {
+		for (String prefix : comments) {
+			if (line.startsWith(prefix)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -116,6 +142,10 @@ public class StreamFileReader extends AbstractItemCountingItemStreamItemReader<E
 		try {
 			is = new ByteArrayInputStream(resourceFile);
 			reader = new BufferedReader(new InputStreamReader(is));
+			
+			for (int i = 0; i < 1; i++) {
+				String line = readLine();
+			}
 			/*
 			 * String temp = null; while((temp = bfReader.readLine()) != null){
 			 * System.out.println(temp); }

@@ -27,7 +27,7 @@ public class MultiFileResourcePartitioner implements Partitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiFileResourcePartitioner.class);
 
-	private MultipartFile[] multipartFiles;
+	/*private MultipartFile[] multipartFiles;
 
 	public MultipartFile[] getMultipartFiles() {
 		return multipartFiles;
@@ -35,7 +35,7 @@ public class MultiFileResourcePartitioner implements Partitioner {
 
 	public void setMultipartFiles(MultipartFile[] multipartFiles) {
 		this.multipartFiles = multipartFiles;
-	}
+	}*/
 
 
 	/*
@@ -50,17 +50,21 @@ public class MultiFileResourcePartitioner implements Partitioner {
 
 		List<MultipartFile> multiPartFiles = (List<MultipartFile>)BatchExecutor.customStorage.get("multiPartFiles");
 		
+		logger.info("multiPartFiles in partitition- " + multiPartFiles);
+		
 		Map<String, ExecutionContext> partitionMap = new HashMap<String, ExecutionContext>();
 
-			for (MultipartFile file : multipartFiles) {
+			for (MultipartFile file : multiPartFiles) {
 				ExecutionContext context = new ExecutionContext();
+				
+				logger.info("file.getOriginalFilename()- " + file.getOriginalFilename());
 				
 				try {
 					context.put("fileResource", Base64.decodeBase64(file.getBytes()));
 					context.put("fileReader", file.getOriginalFilename());
 					partitionMap.put(file.getOriginalFilename(), context);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+
 					e.printStackTrace();
 				}
 				

@@ -54,10 +54,11 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 	public String updateJobId(String accountId, String jobId) {
 
 		Timestamp ts = new Timestamp(Calendar.getInstance().getTimeInMillis());
-		String queryStr = "update EnvelopeScheduledTask set EnvelopeJobEndDateTime = " + ts + ", "
-				+ " EnvelopeJobLastModifiedDateTime = " + ts + " where EnvelopeJobId = " + jobId
-				+ " and EnvelopeJobAccountId = " + accountId;
+		String queryStr = "update EnvelopeScheduledTask set EnvelopeJobEndDateTime = '" + ts + "', "
+				+ " EnvelopeJobLastModifiedDateTime = '" + ts + "' where EnvelopeJobId = '" + jobId
+				+ "' and EnvelopeJobAccountId = '" + accountId + "'";
 
+		System.out.println("EnvelopesDocuServiceDAOImpl.updateJobId()- " + queryStr);
 		Query query = getSession().createQuery(queryStr);
 		int count = query.executeUpdate();
 
@@ -128,8 +129,8 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 			String envelopeTranComments) {
 
 		String queryStr = "update EnvelopeConcurrentLog set envelopeSuccessFlag = " + envelopeSuccessFlag + ", "
-				+ " EnvelopeTransactionComments = " + envelopeTranComments + " where EnvelopeJobId = " + jobId
-				+ " and EnvelopeId = " + envelopeIds;
+				+ " EnvelopeTransactionComments = '" + envelopeTranComments + "' where EnvelopeJobId = '" + jobId
+				+ "' and EnvelopeId = '" + envelopeIds + "'";
 
 		Query query = getSession().createQuery(queryStr);
 		int count = query.executeUpdate();

@@ -11,8 +11,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.docusign.envelope.ds.domain.DSErrors;
 import com.docusign.envelope.ds.domain.Expirations;
 import com.docusign.envelope.ds.domain.Notification;
 import com.docusign.envelope.ds.domain.Reminders;
@@ -35,10 +37,10 @@ public class DSNotificationProcessor implements ItemProcessor<EnvelopeDetails, E
 
 	@Autowired
 	ObjectMapper objectMapper;
-	
+
 	@Autowired
 	EnvelopesDocuServiceDAO envelopesDocuServiceDAO;
-	
+
 	private String jobId;
 
 	public String getJobId() {
@@ -78,55 +80,83 @@ public class DSNotificationProcessor implements ItemProcessor<EnvelopeDetails, E
 	@Override
 	public EnvelopeDetails process(EnvelopeDetails envDetails) throws Exception {
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Content-Type", "application/json");
-		headers.add("X-DocuSign-Authentication", dsAuthHeader);
+		System.out.println("Entering DSNotificationProcessor.process()");
 
-		objectMapper.setSerializationInclusion(Include.NON_NULL);
-		objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
-		objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+		String params = "ExpireEnabled- " + envDetails.getExpireEnabled() + " ExpireAfter-"
+				+ envDetails.getExpireAfter() + " ExpireWarn- " + envDetails.getExpireWarn() + " ReminderEnabled- "
+				+ envDetails.getReminderEnabled() + " ReminderDelay- " + envDetails.getReminderDelay()
+				+ " ReminderFrequency- " + envDetails.getReminderFrequency() + " dsAuthHeader- " + dsAuthHeader;
+		ResponseEntity<String> jsonResp = null;
+		try {
 
-		Reminders reminders = new Reminders();
-		reminders.setReminderDelay(String.valueOf(envDetails.getReminderDelay()));
-		reminders.setReminderEnabled(String.valueOf(envDetails.getReminderEnabled()));
-		reminders.setReminderFrequency(String.valueOf(envDetails.getReminderFrequency()));
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Content-Type", "application/json");
+			headers.add("Accept", "application/json");
+			headers.add("X-DocuSign-Authentication", dsAuthHeader);
 
-		Expirations expirations = new Expirations();
-		expirations.setExpireAfter(String.valueOf(envDetails.getExpireAfter()));
-		expirations.setExpireEnabled(String.valueOf(envDetails.getExpireEnabled()));
-		expirations.setExpireWarn(String.valueOf(envDetails.getExpireWarn()));
+			objectMapper.setSerializationInclusion(Include.NON_NULL);
+			objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
+			objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
 
-		Notification notification = new Notification();
-		notification.setExpirations(expirations);
-		notification.setReminders(reminders);
+			Notification notification = new Notification();
 
-		String msgBody = objectMapper.writeValueAsString(notification);
+			if (null != envDetails.getReminderEnabled()) {
+				Reminders reminders = new Reminders();
+				reminders.setReminderDelay(String.valueOf(envDetails.getReminderDelay()));
+				reminders.setReminderEnabled(String.valueOf(envDetails.getReminderEnabled()));
+				reminders.setReminderFrequency(String.valueOf(envDetails.getReminderFrequency()));
+				notification.setReminders(reminders);
+			}
 
-		HttpEntity<String> uri = new HttpEntity<String>(msgBody, headers);
+			if (null != envDetails.getExpireEnabled()) {
+				Expirations expirations = new Expirations();
+				expirations.setExpireAfter(String.valueOf(envDetails.getExpireAfter()));
+				expirations.setExpireEnabled(String.valueOf(envDetails.getExpireEnabled()));
+				expirations.setExpireWarn(String.valueOf(envDetails.getExpireWarn()));
+				notification.setExpirations(expirations);
+			}
 
-		// https://demo.docusign.net/restapi/v2/accounts/{{AccountID}}/envelopes/fc5e81f0-2dee-4c84-b35f-7dfcd99e3df1/notification
+			String msgBody = objectMapper.writeValueAsString(notification);
 
-		String params = "ExpireEnabled- " + envDetails.getExpireEnabled() + 
-				" ExpireAfter-" + envDetails.getExpireAfter() + 
-				" ExpireWarn- " + envDetails.getExpireWarn() + 
-				" ReminderEnabled- " + envDetails.getReminderEnabled() + 
-				" ReminderDelay- " + envDetails.getReminderDelay() + 
-				" ReminderFrequency- " + envDetails.getReminderFrequency();
-		try{
-			
-			ResponseEntity<String> jsonResp = restTemplate.exchange("https://demo.docusign.net/restapi/v2/accounts/"
-					+ accountId + "/envelopes" + envDetails.getEnvelopeId() + "/notification", HttpMethod.PUT, uri,
-					String.class);
-			
+			HttpEntity<String> uri = new HttpEntity<String>(msgBody, headers);
+
+			// https://demo.docusign.net/restapi/v2/accounts/{{AccountID}}/envelopes/fc5e81f0-2dee-4c84-b35f-7dfcd99e3df1/notification
+
+			System.out.println("DSNotificationProcessor.process()- " + msgBody + " headers- " + headers + " params- "
+					+ params + " accountId- " + accountId + " envId- " + envDetails.getEnvelopeId());
+
+			jsonResp = restTemplate.exchange("https://demo.docusign.net/restapi/v2/accounts/" + accountId
+					+ "/envelopes/" + envDetails.getEnvelopeId() + "/notification", HttpMethod.PUT, uri, String.class);
+
 			logger.info("Body- " + jsonResp.getBody() + " RespHeaders- " + jsonResp.getHeaders());
-			
+
 			envelopesDocuServiceDAO.saveEnvelopeIds(jobId, envDetails.getEnvelopeId(), params, true, "success");
-		}catch(Exception exp){
-			
-			envelopesDocuServiceDAO.saveEnvelopeIds(jobId, envDetails.getEnvelopeId(), params, false, exp.getMessage());
+		} catch (Exception exp) {
+
+			String transMessage = null;
+			try {
+
+				DSErrors error = null;
+				if (exp instanceof HttpClientErrorException) {
+
+					HttpClientErrorException clientExp = (HttpClientErrorException) exp;
+					
+					System.out.println("DSNotificationProcessor.process()- " + clientExp.getResponseBodyAsString());
+
+					error = objectMapper.readValue(clientExp.getResponseBodyAsString(), DSErrors.class);
+				}
+
+				transMessage = exp.getMessage();
+				if (null != error) {
+					transMessage = error.getErrorCode() + "_" + error.getMessage();
+				}
+			} catch (Exception exp1) {
+				exp1.printStackTrace();
+			}
+
+			envelopesDocuServiceDAO.saveEnvelopeIds(jobId, envDetails.getEnvelopeId(), params, false, transMessage);
 		}
-		
-		
+
 		return envDetails;
 	}
 

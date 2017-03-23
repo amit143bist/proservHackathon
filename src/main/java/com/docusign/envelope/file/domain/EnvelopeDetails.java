@@ -102,6 +102,4 @@ public class EnvelopeDetails {
 		this.transMessage = transMessage;
 	}
 
-	
-
 }

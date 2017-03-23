@@ -70,6 +70,7 @@
 
 	<bean id="csvFileItemReader" class="com.docusign.envelope.file.reader.StreamFileReader"
 		scope="step">
+		<property name="name" value="csvStreamFileReader"/>
 		<property name="resourceFile" value="#{stepExecutionContext['fileResource']}" />
 		<property name="lineMapper">
 			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
@@ -82,6 +83,8 @@
 				</property>
 				<property name="fieldSetMapper">
 					<bean class="com.docusign.envelope.file.mapper.EnvelopeSetMapper">
+						<property name="reminderEnabled" value="#{jobParameters['reminderEnabled']}"/>
+						<property name="expirationEnabled" value="#{jobParameters['expirationEnabled']}"/>
 					</bean>
 				</property>
 			</bean>
@@ -91,7 +94,7 @@
 	<bean id="csvFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
 		scope="step">
 		<!-- write to this csv file -->
-		<property name="resource" value="#{jobParameters['outputDataFile']}" />
+		<property name="resource" value="file:#{jobParameters['outputDataFile']}/report.processed_success.csv" />
 		<property name="shouldDeleteIfExists" value="true" />
 		<property name="shouldDeleteIfEmpty" value="true" />
 
@@ -111,7 +114,8 @@
 	<bean id="csvFileFailItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
 		scope="step">
 		<!-- write to this csv file -->
-		<property name="resource" value="#{jobParameters['outputDataFile']}" />
+		
+		<property name="resource" value="file:#{jobParameters['outputDataFile']}/report.processed_failed.csv" />
 		<property name="shouldDeleteIfExists" value="true" />
 		<property name="shouldDeleteIfEmpty" value="true" />
 
