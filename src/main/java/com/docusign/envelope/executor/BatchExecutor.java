@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameter;
@@ -33,10 +35,18 @@ import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
  */
 public class BatchExecutor implements ApplicationContextAware {
 
+	private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
+	
 	public static Map<String, Object> customStorage = new HashMap<String, Object>();
 
 	@Autowired
 	EnvelopesDocuServiceDAO envelopesDocuServiceDAO;
+	
+	@Autowired
+	JobLauncher jobLauncher;
+	
+	@Autowired
+	Job notificationProcessingJob;
 
 	/*
 	 * @Autowired private LineMapper<EnvelopeDetails> lineMapper;
@@ -64,14 +74,16 @@ public class BatchExecutor implements ApplicationContextAware {
 		}
 
 		public void run() {
-			System.out.println(jobId + " multiPartFiles- " + multiPartFiles + " envelopeNotificationDTOList- "
+			logger.info(jobId + " multiPartFiles- " + multiPartFiles + " envelopeNotificationDTOList- "
 					+ envelopeNotificationDTOList);
 
 			BatchExecutor.customStorage.put("multiPartFiles", multiPartFiles);
 			BatchExecutor.customStorage.put("envelopeNotificationDTOList", envelopeNotificationDTOList);
 
-			JobLauncher jobLauncher = (JobLauncher) applicationContext.getBean("jobLauncher");
-			Job job = (Job) applicationContext.getBean("notificationProcessingJob");
+//			JobLauncher jobLauncher = (JobLauncher) applicationContext.getBean("jobLauncher");
+//			Job job = (Job) applicationContext.getBean("notificationProcessingJob");
+			
+			logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob + " applicationContext- " + applicationContext);
 
 			Map<String, JobParameter> parametersMap = new LinkedHashMap<String, JobParameter>();
 
@@ -85,7 +97,7 @@ public class BatchExecutor implements ApplicationContextAware {
 			envelopesDocuServiceDAO.updateJobId(accountId, jobId);
 
 			try {
-				JobExecution execution = jobLauncher.run(job, jobParameters);
+				JobExecution execution = jobLauncher.run(notificationProcessingJob, jobParameters);
 			} catch (JobExecutionAlreadyRunningException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

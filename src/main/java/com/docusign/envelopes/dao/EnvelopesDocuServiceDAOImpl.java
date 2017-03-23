@@ -60,7 +60,7 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 
 		Query query = getSession().createQuery(queryStr);
 		int count = query.executeUpdate();
-		
+
 		return String.valueOf(count);
 	}
 
@@ -72,8 +72,16 @@ public class EnvelopesDocuServiceDAOImpl extends AbstractDAO implements Envelope
 
 	@Override
 	public String fetchJobStatus(String jobId) {
-		// TODO Auto-generated method stub
-		return null;
+
+		EnvelopeScheduledTask envelopeScheduledTask = (EnvelopeScheduledTask) getSession()
+				.load(EnvelopeScheduledTask.class, jobId);
+
+		if (null != envelopeScheduledTask) {
+			if (null != envelopeScheduledTask.getEnvelopeJobEndDateTime()) {
+				return "Completed";
+			}
+		}
+		return "InProgress";
 	}
 
 	@Override
