@@ -21,6 +21,6 @@
 		<beans:property name="suffix" value=".jsp" />
 	</beans:bean>
 	
-	<context:component-scan base-package="com.docusign.proserv" />
+	<context:component-scan base-package="com.docusign.proserv, com.docusign.mvc.controller" />
 	
 </beans:beans>
