@@ -8,11 +8,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.docusign.envelope.ds.domain.EnvelopeDataList;
-import com.docusign.envelope.executor.BatchExecutor;
+import com.docusign.envelopes.batch.executor.BatchExecutor;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
-import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
-import com.docusign.envelopes.dto.EnvelopeStatusDTO;
+import com.docusign.envelopes.ds.domain.EnvelopeDataList;
 
 /**
  * @author Amit.Bist
@@ -33,8 +31,8 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 	 * updateEnvelopesNotifications(java.util.List)
 	 */
 	@Override
-	public String updateEnvelopesNotifications(List<EnvelopeDataList> envelopeNotificationDTOList,
-			String accountId, String dsAuthHeader) {
+	public String updateEnvelopesNotifications(List<EnvelopeDataList> envelopeNotificationDTOList, String accountId,
+			String dsAuthHeader) {
 
 		String jobId = envelopesDocuServiceDAO.createJobId(accountId, "NOTIFICATION_JOB");
 		batchExecutor.asyncCall(jobId, envelopeNotificationDTOList, null, accountId, dsAuthHeader);
@@ -56,20 +54,6 @@ public class EnvelopeServiceImpl implements EnvelopeService {
 		batchExecutor.asyncCall(jobId, null, multiPartFiles, accountId, dsAuthHeader);
 
 		return jobId;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.docusign.envelopes.service.EnvelopeService#updateEnvelopesStatus(java
-	 * .util.List)
-	 */
-	@Override
-	public String updateEnvelopesStatus(List<EnvelopeStatusDTO> envelopeStatusDTOList, String accountId,
-			String dsAuthHeader) {
-
-		return null;
 	}
 
 	/*

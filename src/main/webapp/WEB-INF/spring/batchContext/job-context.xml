@@ -12,13 +12,13 @@
 		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
 
 	<bean id="dataSkipListener"
-		class="com.docusign.envelope.batch.handler.DataRecordSkipHandler">
+		class="com.docusign.envelopes.batch.handler.DataRecordSkipHandler">
 		<!-- <property name="csvFileFailItemWriter" ref="csvFileFailItemWriter" 
 			/> -->
 	</bean>
 
 	<bean id="notificationPartitioner"
-		class="com.docusign.envelope.file.partition.MultiFileResourcePartitioner"
+		class="com.docusign.envelopes.batch.file.partition.MultiFileResourcePartitioner"
 		scope="step">
 		<!-- <property name="inboundDir" value="#{jobParameters['inputDirectoryPath']}" /> -->
 	</bean>
@@ -62,7 +62,7 @@
 	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate" />
 
 	<bean id="dataProcessor"
-		class="com.docusign.envelope.file.processor.DSNotificationProcessor"
+		class="com.docusign.envelopes.batch.file.processor.DSNotificationProcessor"
 		scope="step">
 		
 		<property name = "dsAuthHeader" value="#{jobParameters['dsAuthHeader']}"/>
@@ -71,7 +71,7 @@
 		
 	</bean>
 
-	<bean id="csvFileItemReader" class="com.docusign.envelope.file.reader.StreamFileReader"
+	<bean id="csvFileItemReader" class="com.docusign.envelopes.batch.file.reader.StreamFileReader"
 		scope="step">
 		<property name="name" value="csvStreamFileReader"/>
 		<property name="resourceFile" value="#{stepExecutionContext['fileResource']}" />
@@ -85,7 +85,7 @@
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-					<bean class="com.docusign.envelope.file.mapper.EnvelopeSetMapper">
+					<bean class="com.docusign.envelopes.batch.file.mapper.EnvelopeSetMapper">
 						<property name="reminderEnabled" value="#{jobParameters['reminderEnabled']}"/>
 						<property name="expirationEnabled" value="#{jobParameters['expirationEnabled']}"/>
 					</bean>

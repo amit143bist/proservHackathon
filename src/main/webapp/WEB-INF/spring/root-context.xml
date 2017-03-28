@@ -21,11 +21,11 @@
 		<property name="queueCapacity" value="25" />
 	</bean>
 
-	<bean id="taskExecutorExample" class="com.docusign.envelope.executor.BatchExecutor">
+	<bean id="taskExecutorExample" class="com.docusign.envelopes.batch.executor.BatchExecutor">
 		<constructor-arg ref="taskExecutor" />
 	</bean>
 	
-	<bean id="dsEnvelopeNotificationProcessor" class="com.docusign.envelope.file.processor.DSEnvelopeNotificationProcessor" />
+	<bean id="dsEnvelopeNotificationProcessor" class="com.docusign.envelopes.batch.file.processor.DSEnvelopeNotificationProcessor" />
 	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
 	<bean id="envelopeService" class="com.docusign.envelopes.service.EnvelopeServiceImpl"/>
 </beans>
