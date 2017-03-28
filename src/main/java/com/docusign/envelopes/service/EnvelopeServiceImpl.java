@@ -8,11 +8,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.docusign.envelope.ds.domain.EnvelopeDataList;
 import com.docusign.envelope.executor.BatchExecutor;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
 import com.docusign.envelopes.dto.EnvelopeNotificationDTO;
 import com.docusign.envelopes.dto.EnvelopeStatusDTO;
-import com.docusign.mvc.model.EnvelopeDataList;
 
 /**
  * @author Amit.Bist

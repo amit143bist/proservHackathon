@@ -19,23 +19,20 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.docusign.envelope.ds.domain.EnvelopeDataList;
+import com.docusign.envelope.ds.domain.Notification;
 import com.docusign.envelope.file.processor.DSEnvelopeNotificationProcessor;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
-import com.docusign.mvc.model.EnvelopeDataList;
-import com.docusign.mvc.model.Notification;
 
 /**
  * @author Amit.Bist
  *
  */
-public class BatchExecutor implements ApplicationContextAware {
+public class BatchExecutor {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
 
@@ -92,11 +89,10 @@ public class BatchExecutor implements ApplicationContextAware {
 				// Job job = (Job)
 				// applicationContext.getBean("notificationProcessingJob");
 
-				logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob
-						+ " applicationContext- " + applicationContext);
+				logger.info("jobLauncher- " + jobLauncher + " job- " + notificationProcessingJob);
 
 				System.out.println("BatchExecutor.BatchTask.run()- " + "jobLauncher- " + jobLauncher + " job- "
-						+ notificationProcessingJob + " applicationContext- " + applicationContext);
+						+ notificationProcessingJob);
 
 				Map<String, JobParameter> parametersMap = new LinkedHashMap<String, JobParameter>();
 
@@ -163,11 +159,4 @@ public class BatchExecutor implements ApplicationContextAware {
 				.execute(new BatchTask(jobId, envelopeNotificationDTOList, multiPartFiles, accountId, dsAuthHeader));
 	}
 
-	ApplicationContext applicationContext = null;
-
-	@Override
-	public void setApplicationContext(ApplicationContext arg0) throws BeansException {
-
-		this.applicationContext = applicationContext;
-	}
 }

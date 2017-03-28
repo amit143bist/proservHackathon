@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.docusign.envelope.ds.domain.EnvelopeData;
+import com.docusign.envelope.ds.domain.EnvelopeUpdateStatus;
 import com.docusign.envelope.ds.domain.Track;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
 import com.docusign.envelopes.db.domain.EnvelopeConcurrentLog;
 import com.docusign.envelopes.service.EnvelopeService;
-import com.docusign.mvc.model.EnvelopeData;
-import com.docusign.mvc.model.EnvelopeUpdateStatus;
 
 @RestController
 public class EnvelopeBulkUpdateController {

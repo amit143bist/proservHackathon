@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.docusign.envelope.ds.domain.EnvelopeDataList;
 import com.docusign.envelopes.dto.EnvelopeStatusDTO;
-import com.docusign.mvc.model.EnvelopeDataList;
 
 /**
  * @author Amit.Bist

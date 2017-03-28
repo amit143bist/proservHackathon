@@ -14,8 +14,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.docusign.envelope.ds.domain.DSErrors;
+import com.docusign.envelope.ds.domain.Notification;
 import com.docusign.envelopes.dao.EnvelopesDocuServiceDAO;
-import com.docusign.mvc.model.Notification;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
